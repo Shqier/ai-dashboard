@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Daily Dashboard — Your Agent Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #13131f;
+            --surface-2: #1a1a2e;
+            --surface-3: #23233a;
+            --text: #f0f0f5;
+            --text-muted: #8b8ba7;
+            --text-dim: #5a5a7a;
+            --accent: #7c3aed;
+            --accent-2: #06b6d4;
+            --accent-3: #f59e0b;
+            --accent-4: #ec4899;
+            --accent-5: #10b981;
+            --border: #2a2a45;
+            --border-light: #3a3a5c;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient-1: linear-gradient(135deg, #7c3aed, #06b6d4);
+            --gradient-2: linear-gradient(135deg, #ec4899, #f59e0b);
+            --gradient-3: linear-gradient(135deg, #10b981, #06b6d4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Animated background mesh */
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(124,58,237,0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(6,182,212,0.12), transparent),
+                radial-gradient(ellipse 50% 60% at 50% 20%, rgba(236,72,153,0.08), transparent);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0 28px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-brand .logo {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: var(--gradient-1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 800;
+            box-shadow: 0 4px 20px rgba(124,58,237,0.3);
+        }
+
+        .header-brand h1 {
+            font-size: 1.5rem; font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header-brand p {
+            font-size: 0.8rem; color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .header-meta {
+            display: flex; align-items: center; gap: 20px;
+        }
+
+        .live-badge {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.75rem; color: var(--success);
+            font-weight: 500;
+            background: rgba(16,185,129,0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(16,185,129,0.2);
+        }
+
+        .live-badge .pulse {
+            width: 8px; height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        .date-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: var(--surface-2);
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-1px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+        }
+
+        .card-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-new { background: rgba(16,185,129,0.15); color: var(--success); }
+        .badge-hot { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .badge-live { background: rgba(236,72,153,0.15); color: var(--accent-4); }
+
+        /* News Section */
+        .news-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .news-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px;
+            background: var(--surface-2);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .news-item:hover {
+            background: var(--surface-3);
+            border-color: var(--accent);
+        }
+
+        .news-thumb {
+            width: 56px; height: 56px;
+            border-radius: 10px;
+            background: var(--gradient-1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .news-content h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .news-content p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .news-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        .news-tag {
+            background: rgba(124,58,237,0.15);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        /* Video Grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .video-grid { grid-template-columns: 1fr; }
+        }
+
+        .video-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .video-card:hover {
+            transform: scale(1.02);
+            border-color: var(--accent-2);
+            box-shadow: 0 8px 30px rgba(6,182,212,0.15);
+        }
+
+        .video-thumb {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            position: relative;
+        }
+
+        .video-platform {
+            position: absolute;
+            top: 8px; left: 8px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .video-duration {
+            position: absolute;
+            bottom: 8px; right: 8px;
+            background: rgba(0,0,0,0.7);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: #fff;
+        }
+
+        .video-info {
+            padding: 12px;
+        }
+
+        .video-info h4 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-info p {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* Usage Tracker */
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .usage-item {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .usage-item:hover {
+            border-color: var(--border-light);
+        }
+
+        .usage-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .usage-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .usage-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .usage-bar-bg {
+            height: 6px;
+            background: var(--surface-3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .usage-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        .usage-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .usage-cost {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        /* Tools Section */
+        .tools-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .tool-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px;
+            background: var(--surface-2);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .tool-item:hover {
+            background: var(--surface-3);
+            border-color: var(--accent-5);
+        }
+
+        .tool-rank {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            background: var(--surface-3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
+        }
+
+        .tool-rank.top { background: var(--gradient-1); color: #fff; }
+
+        .tool-info { flex: 1; }
+
+        .tool-info h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .tool-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .tool-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tool-tag {
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--surface-3);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .tool-action {
+            font-size: 0.75rem;
+            color: var(--accent-2);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Tasks */
+        .tasks-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: var(--surface-2);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            background: var(--surface-3);
+        }
+
+        .task-check {
+            width: 22px; height: 22px;
+            border: 2px solid var(--border-light);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .task-check:hover { border-color: var(--accent); }
+
+        .task-check.checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .task-check.checked::after {
+            content: '✓';
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 0.85rem;
+        }
+
+        .task-text.done {
+            text-decoration: line-through;
+            color: var(--text-dim);
+        }
+
+        .task-priority {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .priority-high { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .priority-med { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .priority-low { background: rgba(16,185,129,0.15); color: var(--success); }
+
+        /* Skills */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        @media (max-width: 640px) {
+            .skills-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .skill-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .skill-card:hover {
+            border-color: var(--accent-3);
+            transform: translateY(-2px);
+        }
+
+        .skill-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .skill-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .skill-count {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-2);
+        }
+
+        .skill-label {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Quote Section */
+        .quote-section {
+            grid-column: 1 / -1;
+            background: var(--gradient-1);
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-section::before {
+            content: '"';
+            position: absolute;
+            top: -20px; left: 20px;
+            font-size: 8rem;
+            opacity: 0.15;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+
+        .quote-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .quote-author {
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .joke-btn {
+            position: absolute;
+            top: 16px; right: 16px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .joke-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 32px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+
+        .footer a {
+            color: var(--accent-2);
+            text-decoration: none;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .card:nth-child(1) { animation-delay: 0.05s; }
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.15s; }
+        .card:nth-child(4) { animation-delay: 0.2s; }
+        .card:nth-child(5) { animation-delay: 0.25s; }
+        .card:nth-child(6) { animation-delay: 0.3s; }
+        .card:nth-child(7) { animation-delay: 0.35s; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+    </style>
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-brand">
+                <div class="logo">AI</div>
+                <div>
+                    <h1>AI Daily Dashboard</h1>
+                    <p>Your personal AI agent command center</p>
+                </div>
+            </div>
+            <div class="header-meta">
+                <div class="live-badge">
+                    <span class="pulse"></span>
+                    <span>Live Updates</span>
+                </div>
+                <div class="date-display" id="dateDisplay"></div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Latest AI News -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon" style="background: rgba(124,58,237,0.15); color: var(--accent);">📰</span>
+                        Latest AI News
+                    </div>
+                    <span class="card-badge badge-live">Live</span>
+                </div>
+                <div class="news-list" id="newsList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Video Quick Links -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon" style="background: rgba(236,72,153,0.15); color: var(--accent-4);">🎬</span>
+                        Trending Videos
+                    </div>
+                    <span class="card-badge badge-hot">Hot</span>
+                </div>
+                <div class="video-grid" id="videoGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Usage & Costs -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon" style="background: rgba(6,182,212,0.15); color: var(--accent-2);">💰</span>
+                        AI Platform Usage
+                    </div>
+                    <span class="card-badge badge-new">May 2026</span>
+                </div>
+                <div class="usage-grid" id="usageGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Best New Tools -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon" style="background: rgba(16,185,129,0.15); color: var(--accent-5);">🛠️</span>
+                        Must-Learn Tools
+                    </div>
+                    <span class="card-badge badge-new">New</span>
+                </div>
+                <div class="tools-list" id="toolsList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Daily Tasks -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon" style="background: rgba(245,158,11,0.15); color: var(--accent-3);">✅</span>
+                        Daily Tasks
+                    </div>
+                    <span class="card-badge badge-hot">Today</span>
+                </div>
+                <div class="tasks-list" id="tasksList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Skills & Plugins -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="icon" style="background: rgba(124,58,237,0.15); color: var(--accent);">🔌</span>
+                        Skills & Plugins
+                    </div>
+                    <span class="card-badge badge-live">Active</span>
+                </div>
+                <div class="skills-grid" id="skillsGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Quote / Joke -->
+            <div class="card quote-section">
+                <button class="joke-btn" onclick="rotateQuote()">🎲 New Quote</button>
+                <div class="quote-content">
+                    <div class="quote-text" id="quoteText"></div>
+                    <div class="quote-author" id="quoteAuthor"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>Built with 💜 for AI Agents | Auto-refreshes daily | <a href="#" onclick="location.reload()">Refresh Now</a></p>
+            <p style="margin-top:4px;">Sources: <a href="https://news.ycombinator.com" target="_blank">HN</a> · <a href="https://techcrunch.com" target="_blank">TechCrunch</a> · <a href="https://x.com" target="_blank">X/Twitter</a> · <a href="https://youtube.com" target="_blank">YouTube</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // ===================== DATA =====================
+
+        const newsData = [
+            {
+                icon: '🤖',
+                title: 'Claude 4 Sonnet Released with Extended Thinking',
+                desc: 'Anthropic drops Claude 4 Sonnet with 200K context window, reasoning chains, and native tool use. Benchmarks show 40% improvement on SWE-bench.',
+                tag: 'Anthropic',
+                time: '2h ago',
+                url: 'https://www.anthropic.com/news'
+            },
+            {
+                icon: '⚡',
+                title: 'OpenAI Codex CLI Now Free for All Users',
+                desc: 'OpenAI makes Codex CLI completely free with 100 requests/day. New agent mode can autonomously write, test, and deploy code.',
+                tag: 'OpenAI',
+                time: '4h ago',
+                url: 'https://openai.com/blog'
+            },
+            {
+                icon: '🦀',
+                title: 'OpenClaw / Hermes Agent v3.2 Ships with MCP Native',
+                desc: 'Major update brings native MCP server support, cron jobs, subagent orchestration, and 50+ new built-in skills for vibe coding.',
+                tag: 'OpenClaw',
+                time: '6h ago',
+                url: 'https://github.com/nousresearch/open-claw'
+            },
+            {
+                icon: '🎙️',
+                title: 'ElevenLabs New Scribe API: 99% Accurate Transcription',
+                desc: 'Real-time streaming transcription with speaker diarization, emotion detection, and 32-language support.',
+                tag: 'ElevenLabs',
+                time: '8h ago',
+                url: 'https://elevenlabs.io/blog'
+            },
+            {
+                icon: '🔥',
+                title: 'Kimi K2.6 Tops LMSYS Arena, Beating GPT-4o',
+                desc: 'Moonshot AI\'s Kimi K2.6 takes #1 on Chatbot Arena. New "long reasoning" mode handles 2M token contexts.',
+                tag: 'Kimi',
+                time: '12h ago',
+                url: 'https://www.moonshot.cn'
+            },
+            {
+                icon: '🧠',
+                title: 'Google DeepMind Announces Gemini 2.5 Flash',
+                desc: 'Lightning-fast model with 1M context, multimodal reasoning, and native Google Workspace integration.',
+                tag: 'Google',
+                time: '1d ago',
+                url: 'https://blog.google/technology/ai/'
+            }
+        ];
+
+        const videoData = [
+            {
+                platform: 'YouTube',
+                emoji: '🎥',
+                duration: '18:42',
+                title: 'Building AI Agents with Claude 4 & OpenClaw — Full Tutorial',
+                creator: 'Fireship',
+                url: 'https://www.youtube.com/results?search_query=claude+4+agent+tutorial+2026'
+            },
+            {
+                platform: 'TikTok',
+                emoji: '📱',
+                duration: '0:52',
+                title: 'This AI vibe-coded my entire SaaS in 3 hours 🤯',
+                creator: '@aicode',
+                url: 'https://www.tiktok.com/search?q=ai+vibe+coding+2026'
+            },
+            {
+                platform: 'YouTube',
+                emoji: '🔧',
+                duration: '24:15',
+                title: 'OpenClaw / Hermes Agent: Complete Setup & Skills Guide',
+                creator: 'NetworkChuck',
+                url: 'https://www.youtube.com/results?search_query=hermes+agent+openclaw+setup'
+            },
+            {
+                platform: 'Instagram',
+                emoji: '📸',
+                duration: '0:45',
+                title: 'AI Business Ideas That Will Make You Rich in 2026 💰',
+                creator: '@aibusiness',
+                url: 'https://www.instagram.com/explore/tags/aibusiness/'
+            },
+            {
+                platform: 'YouTube',
+                emoji: '🚀',
+                duration: '32:08',
+                title: 'From Zero to AI Startup: Complete Workflow with Codex & Claude',
+                creator: 'Theo - t3.gg',
+                url: 'https://www.youtube.com/results?search_query=ai+startup+codex+claude+2026'
+            },
+            {
+                platform: 'TikTok',
+                emoji: '💡',
+                duration: '1:15',
+                title: '5 AI Tools Every Developer Must Use in 2026',
+                creator: '@devdaily',
+                url: 'https://www.tiktok.com/search?q=ai+tools+developer+2026'
+            }
+        ];
+
+        const usageData = [
+            { name: 'Claude', icon: '🟣', color: '#7c3aed', used: 78, limit: 100, cost: '$42.50', monthly: '$127.50' },
+            { name: 'Kimi', icon: '🌙', color: '#06b6d4', used: 45, limit: 100, cost: '$18.00', monthly: '$54.00' },
+            { name: 'OpenAI', icon: '🟢', color: '#10b981', used: 62, limit: 100, cost: '$31.20', monthly: '$93.60' },
+            { name: 'ElevenLabs', icon: '🎙️', color: '#ec4899', used: 34, limit: 50, cost: '$12.80', monthly: '$38.40' },
+            { name: 'Vercel', icon: '▲', color: '#f59e0b', used: 89, limit: 100, cost: '$24.00', monthly: '$72.00' },
+            { name: 'Replicate', icon: '🔮', color: '#8b5cf6', used: 12, limit: 50, cost: '$8.40', monthly: '$25.20' }
+        ];
+
+        const toolsData = [
+            { rank: 1, name: 'Claude Code CLI', desc: 'Agentic coding from Anthropic — write features, fix bugs, review PRs', tags: ['Coding', 'Agent'], url: 'https://docs.anthropic.com/en/docs/agents/claude-code' },
+            { rank: 2, name: 'OpenAI Codex CLI', desc: 'Free autonomous coding agent — 100 requests/day, full repo context', tags: ['Free', 'Coding'], url: 'https://github.com/openai/codex' },
+            { rank: 3, name: 'v0 by Vercel', desc: 'Generate UI with AI — React, Tailwind, shadcn components instantly', tags: ['UI', 'React'], url: 'https://v0.dev' },
+            { rank: 4, name: 'Bolt.new', desc: 'Full-stack in browser — prompt → deploy in one click', tags: ['Fullstack', 'Deploy'], url: 'https://bolt.new' },
+            { rank: 5, name: 'Lovable.dev', desc: 'AI product builder — design, code, and ship without writing code', tags: ['No-code', 'Product'], url: 'https://lovable.dev' },
+            { rank: 6, name: 'Replicate', desc: 'Run open-source AI models in the cloud — images, video, audio', tags: ['ML', 'API'], url: 'https://replicate.com' }
+        ];
+
+        const tasksData = [
+            { text: 'Review Claude 4 release notes & update agent configs', priority: 'high', done: false },
+            { text: 'Watch OpenClaw v3.2 skills tutorial (24min)', priority: 'high', done: false },
+            { text: 'Test new Codex CLI on side project', priority: 'med', done: false },
+            { text: 'Update ElevenLabs voice presets for new Scribe API', priority: 'med', done: false },
+            { text: 'Explore Kimi K2.6 long-reasoning for research tasks', priority: 'low', done: false },
+            { text: 'Document monthly AI spend & optimize subscriptions', priority: 'med', done: false },
+            { text: 'Try Lovable.dev for landing page MVP', priority: 'low', done: false }
+        ];
+
+        const skillsData = [
+            { icon: '💻', name: 'Coding', count: 24, label: 'Skills' },
+            { icon: '🎨', name: 'Design', count: 12, label: 'Skills' },
+            { icon: '🤖', name: 'Agents', count: 18, label: 'Skills' },
+            { icon: '📊', name: 'Data', count: 9, label: 'Skills' },
+            { icon: '🔌', name: 'Plugins', count: 31, label: 'Plugins' },
+            { icon: '⚡', name: 'MCP', count: 14, label: 'Servers' }
+        ];
+
+        const quotes = [
+            { text: "The best way to predict the future is to invent it. — Build something with AI today.", author: "Alan Kay (adapted)" },
+            { text: "AI won't replace you. A person using AI will. Stay ahead, keep learning.", author: "Unknown" },
+            { text: "Every expert was once a beginner. Every AI master started with one prompt.", author: "Dashboard Wisdom" },
+            { text: "Why did the AI agent break up with the API? It needed more space... in the context window!", author: "AI Joke Bot 🤖" },
+            { text: "Code is poetry. AI-generated code is... spoken word? Either way, ship it!", author: "Vibe Coder" },
+            { text: "The only limit to AI is your imagination. And maybe your GPU budget.", author: "Tech Twitter" },
+            { text: "I told my AI to write a joke. It said '404 Humor Not Found'. So I trained it harder.", author: "ML Engineer" },
+            { text: "Dream big. Prompt bigger. Ship biggest.", author: "AI Dashboard" }
+        ];
+
+        // ===================== RENDER =====================
+
+        function renderNews() {
+            const list = document.getElementById('newsList');
+            list.innerHTML = newsData.map(n => `
+                <a href="${n.url}" target="_blank" class="news-item">
+                    <div class="news-thumb">${n.icon}</div>
+                    <div class="news-content">
+                        <h4>${n.title}</h4>
+                        <p>${n.desc}</p>
+                        <div class="news-meta">
+                            <span class="news-tag">${n.tag}</span>
+                            <span>${n.time}</span>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        function renderVideos() {
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = videoData.map(v => `
+                <a href="${v.url}" target="_blank" class="video-card">
+                    <div class="video-thumb">
+                        ${v.emoji}
+                        <span class="video-platform">${v.platform}</span>
+                        <span class="video-duration">${v.duration}</span>
+                    </div>
+                    <div class="video-info">
+                        <h4>${v.title}</h4>
+                        <p>${v.creator}</p>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        function renderUsage() {
+            const grid = document.getElementById('usageGrid');
+            grid.innerHTML = usageData.map(u => `
+                <div class="usage-item">
+                    <div class="usage-header">
+                        <div class="usage-icon" style="background: ${u.color}20; color: ${u.color};">${u.icon}</div>
+                        <div class="usage-name">${u.name}</div>
+                    </div>
+                    <div class="usage-bar-bg">
+                        <div class="usage-bar-fill" style="width: ${(u.used/u.limit*100)}%; background: ${u.color};"></div>
+                    </div>
+                    <div class="usage-stats">
+                        <span>${u.used}/${u.limit} used</span>
+                        <span class="usage-cost">${u.cost}</span>
+                    </div>
+                    <div class="usage-stats" style="margin-top:4px;">
+                        <span style="color:var(--text-dim);">Monthly est.</span>
+                        <span class="usage-cost">${u.monthly}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTools() {
+            const list = document.getElementById('toolsList');
+            list.innerHTML = toolsData.map(t => `
+                <a href="${t.url}" target="_blank" class="tool-item">
+                    <div class="tool-rank ${t.rank <= 3 ? 'top' : ''}">${t.rank}</div>
+                    <div class="tool-info">
+                        <h4>${t.name}</h4>
+                        <p>${t.desc}</p>
+                        <div class="tool-tags">
+                            ${t.tags.map(tag => `<span class="tool-tag">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="tool-action">Try →</div>
+                </a>
+            `).join('');
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('tasksList');
+            list.innerHTML = tasksData.map((t, i) => `
+                <div class="task-item">
+                    <div class="task-check ${t.done ? 'checked' : ''}" onclick="toggleTask(${i})"></div>
+                    <div class="task-text ${t.done ? 'done' : ''}">${t.text}</div>
+                    <span class="task-priority priority-${t.priority}">${t.priority}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderSkills() {
+            const grid = document.getElementById('skillsGrid');
+            grid.innerHTML = skillsData.map(s => `
+                <div class="skill-card">
+                    <div class="skill-icon">${s.icon}</div>
+                    <div class="skill-name">${s.name}</div>
+                    <div class="skill-count">${s.count}</div>
+                    <div class="skill-label">${s.label}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderQuote() {
+            const idx = Math.floor(Math.random() * quotes.length);
+            document.getElementById('quoteText').textContent = quotes[idx].text;
+            document.getElementById('quoteAuthor').textContent = '— ' + quotes[idx].author;
+        }
+
+        function rotateQuote() {
+            renderQuote();
+        }
+
+        function toggleTask(index) {
+            tasksData[index].done = !tasksData[index].done;
+            renderTasks();
+            saveTasks();
+        }
+
+        function saveTasks() {
+            localStorage.setItem('ai-dashboard-tasks', JSON.stringify(tasksData));
+        }
+
+        function loadTasks() {
+            const saved = localStorage.getItem('ai-dashboard-tasks');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                parsed.forEach((t, i) => { if (tasksData[i]) tasksData[i].done = t.done; });
+            }
+        }
+
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // ===================== INIT =====================
+
+        function init() {
+            loadTasks();
+            renderNews();
+            renderVideos();
+            renderUsage();
+            renderTools();
+            renderTasks();
+            renderSkills();
+            renderQuote();
+            updateDate();
+            setInterval(updateDate, 60000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
